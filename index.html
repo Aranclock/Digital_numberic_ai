@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digit AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+</head>
+<body style="text-align:center; font-family:sans-serif;">
+
+  <h2>숫자 그리기</h2>
+  <canvas id="canvas" width="64" height="64" style="border:2px solid black;"></canvas>
+  <br><br>
+
+  <button onclick="predict()">예측</button>
+  <button onclick="clearCanvas()">지우기</button>
+
+  <h3 id="result">결과: ?</h3>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, 64, 64);
+
+    let drawing = false;
+
+    // 마우스
+    canvas.addEventListener("mousedown", () => drawing = true);
+    canvas.addEventListener("mouseup", () => drawing = false);
+    canvas.addEventListener("mousemove", draw);
+
+    // 터치 (핵심🔥)
+    canvas.addEventListener("touchstart", () => drawing = true);
+    canvas.addEventListener("touchend", () => drawing = false);
+    canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+
+      draw({
+        offsetX: touch.clientX - rect.left,
+        offsetY: touch.clientY - rect.top
+      });
+    });
+
+    function draw(e) {
+      if (!drawing) return;
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(e.offsetX, e.offsetY, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function clearCanvas() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, 64, 64);
+    }
+
+    let model;
+
+    async function loadModel() {
+      model = await tf.loadLayersModel(
+        "https://storage.googleapis.com/tfjs-models/tfjs/mnist/model.json"
+      );
+    }
+
+    loadModel();
+
+    async function predict() {
+      const imageData = ctx.getImageData(0, 0, 64, 64);
+
+      let tensor = tf.browser.fromPixels(imageData, 1)
+        .resizeNearestNeighbor([28, 28])
+        .toFloat()
+        .div(255.0)
+        .expandDims();
+
+      const prediction = model.predict(tensor);
+      const result = prediction.argMax(1).dataSync()[0];
+
+      document.getElementById("result").innerText = "결과: " + result;
+    }
+  </script>
+
+</body>
+</html>
