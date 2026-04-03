@@ -24,46 +24,73 @@
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, 64, 64);
 
-    let drawing = false;
-
     // 그리기 설정
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+ctx.lineCap = "round";
+ctx.lineJoin = "round";
 
-    // 마우스
-    canvas.addEventListener("mousedown", () => drawing = true);
-    canvas.addEventListener("mouseup", () => drawing = false);
-    canvas.addEventListener("mousemove", draw);
+let drawing = false;
+let lastPos = null;
 
-    canvas.addEventListener("touchstart", (e) => {
+// 좌표 계산 함수 (핵심🔥)
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+
+  if (e.touches) {
+    return {
+      x: e.touches[0].clientX - rect.left,
+      y: e.touches[0].clientY - rect.top
+    };
+  } else {
+    return {
+      x: e.offsetX,
+      y: e.offsetY
+    };
+  }
+}
+
+// 시작
+canvas.addEventListener("mousedown", () => drawing = true);
+canvas.addEventListener("touchstart", (e) => {
   e.preventDefault();
   drawing = true;
 });
 
-canvas.addEventListener("touchend", (e) => {
-  e.preventDefault();
+// 끝
+canvas.addEventListener("mouseup", () => {
   drawing = false;
+  lastPos = null;
 });
 
+canvas.addEventListener("touchend", () => {
+  drawing = false;
+  lastPos = null;
+});
+
+// 이동
+canvas.addEventListener("mousemove", draw);
 canvas.addEventListener("touchmove", (e) => {
   e.preventDefault();
-
-  const rect = canvas.getBoundingClientRect();
-  const touch = e.touches[0];
-
-  draw({
-    offsetX: touch.clientX - rect.left,
-    offsetY: touch.clientY - rect.top
-  });
+  draw(e);
 });
 
-    function draw(e) {
-      if (!drawing) return;
-      ctx.fillStyle = "white";
-      ctx.beginPath();
-      ctx.arc(e.offsetX, e.offsetY, 4, 0, Math.PI * 2);
-      ctx.fill();
+// 그리기
+    
+function draw(e) {
+  if (!drawing) return;
+
+  const pos = getPos(e);
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 10;
+
+  	if (lastPos) {
+  	  ctx.beginPath();
+      ctx.moveTo(lastPos.x, lastPos.y);
+	    ctx.lineTo(pos.x, pos.y);
+	    ctx.stroke();
     }
+  
+  	lastPos = pos;
+  }
 
     function clearCanvas() {
       ctx.fillStyle = "black";
