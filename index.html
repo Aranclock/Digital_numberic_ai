@@ -9,7 +9,7 @@
 
   <h2>숫자 그리기</h2>
   <canvas id="canvas" width="64" height="64"
-    style="border:2px solid black; width:300px; height:300px;"></canvas>
+    style="touch-action:none; border:2px solid black; width:300px; height:300px;"></canvas>
   <br><br>
 
   <button onclick="predict()">예측</button>
@@ -35,19 +35,27 @@
     canvas.addEventListener("mouseup", () => drawing = false);
     canvas.addEventListener("mousemove", draw);
 
-    // 터치
-    canvas.addEventListener("touchstart", () => drawing = true);
-    canvas.addEventListener("touchend", () => drawing = false);
-    canvas.addEventListener("touchmove", (e) => {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
+    canvas.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  drawing = true;
+});
 
-      draw({
-        offsetX: touch.clientX - rect.left,
-        offsetY: touch.clientY - rect.top
-      });
-    });
+canvas.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  drawing = false;
+});
+
+canvas.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+
+  draw({
+    offsetX: touch.clientX - rect.left,
+    offsetY: touch.clientY - rect.top
+  });
+});
 
     function draw(e) {
       if (!drawing) return;
